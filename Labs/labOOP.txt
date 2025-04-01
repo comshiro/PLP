@@ -1,0 +1,162 @@
+
+### 3. **Interfaces**
+Introduce interfaces to define shared behavior without implementation.
+
+```coq
+Inductive InterfaceDecl :=
+  | interface : string -> list (string * list AExp) -> InterfaceDecl. (* Interface name and method signatures *)
+```
+
+Example:
+```coq
+Definition DrawableInterface :=
+  interface "Drawable"
+    [("draw", []); ("erase", [])]. (* Abstract methods *)
+```
+
+---
+
+### 4. **Inheritance and Method Overriding**
+Enable child classes to inherit attributes and methods from parent classes.
+
+Example:
+```coq
+Definition ColoredPointClass :=
+  class "ColoredPoint" (Some "Point") (* Inherits from Point *)
+    [("color", public, num 0)] (* Additional attributes *)
+    [("move", public, seq (assign "x" (var "new_x"))
+                          (assign "y" (var "new_y"))) (* Override method *)].
+```
+
+---
+
+### 5. **Polymorphism (Dynamic Dispatch)**
+Support dynamic method resolution based on the runtime type of objects.
+
+This could involve:
+- A special syntax for virtual methods.
+- A construct for dynamic dispatch:
+  ```coq
+  Inductive Stmt :=
+  | dynamicCall : string -> string -> list AExp -> Stmt. (* Object, method name, arguments *)
+  ```
+
+Example:
+```coq
+Definition DrawShape :=
+  dynamicCall "shape" "draw" [].
+```
+
+---
+
+### 6. **Abstract Classes**
+Add syntax for abstract classes, which cannot be instantiated directly.
+
+```coq
+Inductive ClassDecl :=
+  | abstractClass : string -> (* Abstract class name *)
+                    option string -> (* Parent class name *)
+                    list (string * AccessModifier * AExp) -> (* Attributes *)
+                    list (string * AccessModifier * Stmt) -> (* Methods *)
+                    ClassDecl.
+```
+
+Example:
+```coq
+Definition AbstractShapeClass :=
+  abstractClass "Shape" None
+    [("color", public, num 0)] (* Common attributes *)
+    [("draw", public, skip)]. (* Abstract methods *)
+```
+
+---
+
+### 7. **Exception Handling**
+Introduce constructs for try-catch-finally blocks.
+
+```coq
+Inductive Stmt :=
+| tryCatch : Stmt -> Stmt -> Stmt -> Stmt. (* try, catch, finally blocks *)
+```
+
+Example:
+```coq
+Definition ErrorHandling :=
+  tryCatch
+    (assign "x" (div (num 1) (var "y"))) (* try *)
+    (assign "error" (num 1))             (* catch *)
+    skip.                                (* finally *)
+```
+
+---
+
+### 8. **Lambda Functions**
+Enable first-class functions for functional programming capabilities.
+
+```coq
+Inductive AExp :=
+| lambda : list string -> Stmt -> AExp. (* Parameters, body *)
+```
+
+Example:
+```coq
+Definition IncrementLambda :=
+  lambda ["x"] (assign "result" (add (var "x") (num 1))).
+```
+
+---
+
+### 9. **Annotations**
+Support for annotations, often used for metadata or custom behaviors.
+
+```coq
+Inductive Annotation :=
+| annotate : string -> AExp -> Annotation.
+
+Inductive ClassDecl :=
+  | class : string -> option string -> list Annotation -> (* Annotations *)
+            list (string * AccessModifier * AExp) -> 
+            list (string * AccessModifier * Stmt) -> ClassDecl.
+```
+
+Example:
+```coq
+Definition AnnotatedClass :=
+  class "MyClass" None
+    [annotate "deprecated" (num 1)]
+    [("value", public, num 0)]
+    [("getValue", public, seq (assign "result" (var "value")) skip)].
+```
+
+---
+
+### 10. **Constructors with Overloading**
+Extend constructor syntax to support overloading.
+
+```coq
+Inductive Stmt :=
+| constructor : string -> list (list (string * AExp)) -> Stmt. (* Overloaded constructors *)
+
+Definition PointConstructors :=
+  constructor "Point"
+    [[("x", num 0); ("y", num 0)]; (* Default constructor *)
+     [("x", num 1); ("y", num 1)]]. (* Overloaded constructor *)
+```
+
+---
+
+### Summary
+
+You could incorporate these concepts into your syntax:
+1. **Static members** for shared data or methods.
+2. **Encapsulation** using getters and setters.
+3. **Interfaces** for shared behavior definitions.
+4. **Inheritance** with method overriding.
+5. **Polymorphism** with dynamic dispatch.
+6. **Abstract classes** for common behaviors.
+7. **Exception handling** for error management.
+8. **Lambda functions** for higher-order programming.
+9. **Annotations** for metadata.
+10. **Constructor overloading** for flexibility.
+
+Let me know which of these you'd like to implement!

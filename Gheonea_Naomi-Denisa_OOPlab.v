@@ -5,7 +5,7 @@ Import ListNotations.
 
 Inductive AExp :=
 | num : nat -> AExp
-| var : string -> string -> AExp  (* First string for object, second for variable *)
+| var : string -> string -> AExp  (*object, variable, value *)
 | add: AExp -> AExp -> AExp
 | sub : AExp -> AExp -> AExp
 | mul : AExp -> AExp -> AExp
@@ -16,7 +16,8 @@ Inductive BExp :=
 | bfalse : BExp                     
 | bnot : BExp -> BExp             
 | band : BExp -> BExp -> BExp 
-     
+| bor :BExp -> BExp -> BExp 
+| beq : AExp -> AExp -> BExp 
 | blessthan : AExp -> AExp -> BExp 
 | bgreaterthan : AExp -> AExp -> BExp. 
 
@@ -49,7 +50,7 @@ Inductive MemberType :=
 
 
 Inductive InterfaceDecl :=
-  | interface : string -> list (string * list AExp) -> InterfaceDecl. (* Interface name and method signatures *)
+  | interface : string -> list (string * list AExp) -> InterfaceDecl.
 
 
 
@@ -70,6 +71,7 @@ Inductive ClassDecl :=
     membru + access_modifier + aexp
     membru + access_modifier + stmt
     membru + membertype + accessmodifier + stmt
+    var setter getter
 *)
 Definition EnvClasses := list (string * ClassDecl). (* (ClassName, ClassDefinition) *)
 
@@ -95,7 +97,7 @@ Fixpoint lookup_method (env_methods : EnvMethods) (obj : string) (method_name : 
 
 Fixpoint update (env : Env) (obj : string) (var : string) (new_val : nat) : Env :=
   match env with
-  | [] => [ ([(obj, var)], new_val)]  (* Add a new binding if not found *)
+  | [] => [ ([(obj, var)], new_val)]
   | ((key, n) :: rest) =>
       if andb (String.eqb obj (fst (hd ("", "") key))) (* Check obj *)
                (String.eqb var (snd (hd ("", "") key))) (* Check var *)
@@ -163,6 +165,11 @@ Inductive bexp_eval : BExp -> Env -> bool -> Prop :=
       b1 ={ sigma }=> v1 ->
       b2 ={ sigma }=> v2 ->
       (band b1 b2) ={ sigma }=> (andb v1 v2)
+
+  | bs_or : forall b1 b2 sigma v1 v2,
+      b1 ={ sigma }=> v1 ->
+      b2 ={ sigma }=> v2 ->
+      (bor b1 b2) ={ sigma }=> (orb v1 v2)
       
   | bs_less : forall a1 a2 sigma n1 n2,
       a1 =[ sigma ]=> n1 ->
@@ -176,24 +183,32 @@ Inductive bexp_eval : BExp -> Env -> bool -> Prop :=
 where "B ={ S }=> b" := (bexp_eval B S b).
 
 
-Definition PointClass := 
-  class "Point" None (* No parent class *)
-    (Some [("x", instance, public, num 0); ("y", instance, public, num 0)]) 
+Definition GradesClass := 
+  class "Grades" None (* No parent class *)
+    (Some [("PLP", instance, public, num 0); ("AG", instance, public, num 0)]) 
     None (* No static attributes *)
-    (Some[("move", public, seq 
-                (assign "this" "x" (var "this" "new_x")) (* Assigning new_x to the x attribute of this object *)
-                (assign "this" "y" (var "this" "new_y")))] )
+    (Some[("Update", public, seq 
+                (assign "this" "PLP" (var "this" "new_PLP"))
+                (assign "this" "AG" (var "this" "new_AG")))] )
     None. (* No static methods *)
 
 Inductive Obj :=
 | object : string -> string -> Obj.
 
-Definition InstantiatePoint :=
-  object "p" "Point".
+Definition InstantiateGrade :=
+  object "g" "Grade".
 
-Definition MovePoint :=
-  methodCall "p" "move" (cons (num 5) (cons (num 10) nil)).
+Definition UpdateGrade :=
+  methodCall "g" "update" (cons (num 5) (cons (num 10) nil)).
                                                                                                                         
+Definition RectangleClass := 
+  class "Rectangle" (Some "Shape")
+    (Some [("length", static, public, num 0); ("width", static, public, num 0)]) 
+    None
+    (Some[("Resize", public, seq 
+                (assign "this" "length" (var "this" "new_length"))
+                (assign "this" "width" (var "this" "new_width")))] )
+    None.
 
 Definition InstantiateRectangle := 
   object "r" "Rectangle".
@@ -216,18 +231,18 @@ Definition IndexClass :=
             assign "Index" "count" (add (var "Index" "count") (num 1)))] )  (* Static method 'increment' to increase 'count' by 1 *)
     None.  (* No static methods *)
 
-Definition PointWithEncapsulation :=
+Definition PointWithEncapsulationClass :=
   class "Point" None None
-    (Some [("x", private, num 0);  (* Private attribute x initialized to 0 *)
-           ("y", private, num 0)])  (* Private attribute y initialized to 0 *)
+    (Some [("x", private, num 0);  
+           ("y", private, num 0)])  
     (Some [("getX", public, seq 
-                (assign "this" "x" (var "this" "x"))  (* Getter for x: result = x *)
+                (assign "this" "x" (var "this" "x"))  
                 skip);
            ("setX", public, 
-                assign "this" "x" (var "this" "new_value"))])  (* Setter for x: this.x = new_value *)
+                assign "this" "x" (var "this" "new_value"))]) 
     None 
-    (Some [("x", true, true);   (* Flags to generate getter and setter for x *)
-           ("y", true, true)]).  (* Flags to generate getter and setter for y *)
+    (Some [("x", true, true); 
+           ("y", true, true)]).
 
 
 Fixpoint stmt_eval (s: Stmt) (sigma: Env) : Env :=

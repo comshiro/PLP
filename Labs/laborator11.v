@@ -36,9 +36,9 @@ Inductive ClassDecl :=
 
 Definition PointClass :=
   class "Point"
-    [("x", Public, num 0); ("y", Public, num 0)]  (* Attributes with Public access *)
-    [("move", Public, seq (assign "x" (var "new_x"))
-                          (assign "y" (var "new_y")))]. (* Methods with Public access *)
+    [("x", num 0); ("y", num 0)]         (* Atribute: perechi (nume, valoare inițială) *)
+    [("move", seq (assign "x" (var "new_x")) 
+                  (assign "y" (var "new_y")))]. (* Metode: perechi (nume, corpul metodei) *)
 
 
 Inductive Obj :=
