@@ -1,0 +1,1 @@
+This repository contains my lab work for the Programming Languages course, implemented in Coq using Gallina. The course focuses on formal methods for defining programming languages, including syntax, semantics, interpreters, and type systems. The work here showcases the theoretical and practical application of these concepts using the Coq proof assistant.
